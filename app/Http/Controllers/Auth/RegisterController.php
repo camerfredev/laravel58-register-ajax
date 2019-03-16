@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\User;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Foundation\Auth\ThrottlesLogins;
+
 
 class RegisterController extends Controller
 {
@@ -21,7 +24,8 @@ class RegisterController extends Controller
     |
     */
 
-    use RegistersUsers;
+    use RegistersUsers,ThrottlesLogins;
+    //    ValidatesRequests;
 
     /**
      * Where to redirect users after registration.
@@ -37,7 +41,8 @@ class RegisterController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('guest');
+        $this->middleware('guest', ['except' => 'logout']);
+        $this->middleware('ajax')->only('register');
     }
 
     /**
@@ -69,4 +74,47 @@ class RegisterController extends Controller
             'password' => Hash::make($data['password']),
         ]);
     }
+
+    /**
+     * register
+     *
+     * @param  mixed $request
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function register(Request $request)
+    {
+        $validator = $this->validator($request->all());
+       
+        if($validator->fails()){
+           
+            //  $this->throwValidationException( $request, $validator );
+             
+            return redirect()
+            ->back()
+            ->withInput($validator->validate());
+           // return back();
+             //je doit creer une exception 
+            
+        }
+
+        $this->create($request->all());
+
+        return response()->json();
+    }
+
+
+     /**
+     * Show the application registration form.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function showRegistrationForm()
+    {
+        return abort(404);
+    
+    }
+
+
+
 }
